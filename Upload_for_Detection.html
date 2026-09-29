@@ -1,70 +1,1604 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>
-		Box Detection in Warehouse Conveyor Belts	
-	</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionBox AI - Warehouse Box Detection & Live Analytics</title>
+    <!-- Modern Typography & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-image: url("https://www.greyorange.com/wp-content/uploads/2022/10/BANNER-IL-min.jpeg"); /* Add your background image here */
-            background-size: cover;
-            background-position: center;
-            background-color: rgba(255, 255, 255, 0.01); /* Semi-transparent white */
-            
+        :root {
+            --bg-base: #090d16;
+            --bg-surface: #0f172a;
+            --bg-card: rgba(19, 29, 49, 0.75);
+            --bg-card-hover: rgba(28, 41, 68, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-active: #0ea5e9;
+            --primary: #0ea5e9;
+            --primary-glow: rgba(14, 165, 233, 0.35);
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-sub: #64748b;
+            --danger: #ef4444;
+            --shadow-subtle: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
-        form {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 30px;
-            border-radius: 10px;
-            background-color: rgba(255, 255, 255, 1); /* Semi-transparent white */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(14, 165, 233, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+                linear-gradient(to bottom, #090d16, #0d1527);
+            color: var(--text-main);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            overflow-x: hidden;
         }
-        h2 {
-            text-align: center;
-            font-weight: bold;
-            margin-bottom: 15px;
+
+        /* --- Header & Top Bar --- */
+        header {
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-glass);
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 12px;
         }
-        label {
-            font-weight: bold;
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
-        input[type="file"] {
-            padding: 10px 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            cursor: pointer;
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-emerald));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 16px var(--primary-glow);
         }
-        input[type="submit"] {
-            background-color: #03A9F4; /* Blue */
-            color: white;
-            padding: 10px 20px;
+
+        .brand-logo svg {
+            width: 24px;
+            height: 24px;
+            fill: #fff;
+        }
+
+        .brand-text h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, #ffffff, #93c5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .model-select-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
+            padding: 4px 10px;
+        }
+
+        .model-select-wrap label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .model-select {
+            background: transparent;
             border: none;
-            border-radius: 5px;
+            color: #38bdf8;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            font-weight: 600;
+            outline: none;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
         }
-        input[type="submit"]:hover {
-            background-color: #028BEB;
+
+        .model-select option {
+            background: #0f172a;
+            color: #fff;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-emerald);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-emerald);
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        /* --- Mode Switcher Navigation --- */
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px auto 10px;
+            padding: 0 20px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .tabs-nav {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 5px;
+            border-radius: 14px;
+            border: 1px solid var(--border-glass);
+            width: 100%;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 18px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #0284c7, #0ea5e9);
+            color: #ffffff;
+            box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
+        }
+
+        /* --- Main Layout Grid --- */
+        main {
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 16px 24px 36px;
+            flex: 1;
+        }
+
+        .view-panel {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .view-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Live Camera View Layout --- */
+        .camera-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .camera-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feed-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 18px;
+            padding: 18px;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feed-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .select-styled {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            padding: 8px 14px;
+            font-size: 0.88rem;
+            border-radius: 10px;
+            outline: none;
+            font-family: inherit;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            max-width: 260px;
+        }
+
+        .select-styled:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            padding: 8px 16px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.14);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #0ea5e9);
+            border: none;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0369a1, #0284c7);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            color: #fff;
+        }
+
+        .video-viewport {
+            position: relative;
+            width: 100%;
+            min-height: 460px;
+            background: #040711;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        video#liveVideo {
+            width: 100%;
+            height: auto;
+            max-height: 580px;
+            object-fit: contain;
+            display: block;
+        }
+
+        canvas#detectionCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            object-fit: contain;
+        }
+
+        .viewport-placeholder {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: var(--text-sub);
+            text-align: center;
+            padding: 24px;
+            z-index: 5;
+        }
+
+        .viewport-placeholder svg {
+            width: 52px;
+            height: 52px;
+            opacity: 0.6;
+        }
+
+        .stream-hud-overlay {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hud-tag {
+            background: rgba(9, 13, 22, 0.75);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* --- Telemetry & Controls Sidebar --- */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 18px;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .card-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+        }
+
+        .metric-box {
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .metric-box:hover {
+            border-color: rgba(14, 165, 233, 0.4);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .metric-box.full-width {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(16, 185, 129, 0.1));
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+
+        .metric-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* --- Sliders & Settings --- */
+        .setting-row {
+            margin-top: 12px;
+        }
+
+        .setting-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #1e293b;
+            outline: none;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* --- Logs & Activity --- */
+        .activity-feed {
+            max-height: 160px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .activity-item {
+            padding: 4px 8px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 4px;
+            border-left: 2px solid var(--accent-cyan);
+            color: var(--text-muted);
+        }
+
+        /* --- Photo Upload Mode Layout --- */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 960px) {
+            .photo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dropzone {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            padding: 32px 20px;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.6);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--primary);
+            background: rgba(14, 165, 233, 0.08);
+            transform: scale(1.01);
+        }
+
+        .dropzone svg {
+            width: 48px;
+            height: 48px;
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .dropzone p {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .dropzone span {
+            font-size: 0.78rem;
+            color: var(--text-sub);
+            margin-top: 4px;
+            display: block;
+        }
+
+        .sample-images-bar {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .sample-btn {
+            background: rgba(14, 165, 233, 0.15);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            color: #38bdf8;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .sample-btn:hover {
+            background: rgba(14, 165, 233, 0.3);
+        }
+
+        /* --- Photo Result Canvas & Viewer --- */
+        .photo-viewer-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 18px;
+            padding: 18px;
+            backdrop-filter: blur(16px);
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .photo-preview-wrap {
+            width: 100%;
+            min-height: 400px;
+            background: #040711;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .photo-preview-wrap img {
+            max-width: 100%;
+            max-height: 520px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        /* --- Snapshot Gallery --- */
+        .snapshots-strip {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 8px 0;
+            margin-top: 10px;
+        }
+
+        .snapshot-thumb {
+            width: 72px;
+            height: 54px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--border-glass);
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .snapshot-thumb:hover {
+            transform: scale(1.06);
+            border-color: var(--primary);
+        }
+
+        /* --- Spinner & Toast --- */
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
-    <form action="http://127.0.0.1:8000/YOLO_Box_Prediction_Website" method="post" enctype="multipart/form-data">
-        <h2>Box Detection in Warehouse Conveyor Belts</h2>
-        <label for="file">Upload image:</label>
-        <input type="file" id="file" name="file" accept=".png, .jpg">
-        <input type="submit" value="Find Boxes">
-    </form>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="brand">
+            <div class="brand-logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18s-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18s.41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9zM12 4.15L5.8 7.64 12 11.13l6.2-3.49L12 4.15zM4.75 9.15v6.2l6.25 3.51v-6.2L4.75 9.15zm14.5 0l-6.25 3.51v6.2l6.25-3.51v-6.2z"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <h1>VISIONBOX AI</h1>
+                <p>Warehouse Vision Analytics</p>
+            </div>
+        </div>
+
+        <div class="header-meta">
+            <!-- Model Switcher Selector -->
+            <div class="model-select-wrap">
+                <label for="modelSelect">Weights:</label>
+                <select id="modelSelect" class="model-select" onchange="onModelSwitch(this.value)">
+                    <option value="best.pt">best.pt (Active)</option>
+                </select>
+            </div>
+
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span id="modelStatusTag">YOLO MODEL ACTIVE</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Switcher Mode Tabs -->
+    <div class="tabs-container">
+        <div class="tabs-nav">
+            <button class="tab-btn active" id="tabLiveBtn" onclick="switchMode('live')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 7l-7 5 7 5V7z"/>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+                Live Camera Feed
+            </button>
+            <button class="tab-btn" id="tabPhotoBtn" onclick="switchMode('photo')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                Upload Photo
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main>
+
+        <!-- =================================================================== -->
+        <!-- VIEW 1: LIVE CAMERA MODE                                            -->
+        <!-- =================================================================== -->
+        <div id="liveViewPanel" class="view-panel active">
+            <div class="camera-grid">
+                
+                <!-- Video Stream Viewport & Controls -->
+                <div class="feed-container">
+                    <div class="feed-header">
+                        <div class="control-group">
+                            <label for="cameraSelect" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Camera Source:</label>
+                            <select id="cameraSelect" class="select-styled" onchange="onCameraSelected()">
+                                <option value="">Select Camera...</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <button id="startCamBtn" class="btn btn-primary" onclick="toggleCameraStream()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                <span>Start Live Camera</span>
+                            </button>
+                            <button id="snapBtn" class="btn" onclick="captureSnapshot()" disabled title="Capture Snapshot">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                                Snapshot
+                            </button>
+                            <button id="flipBtn" class="btn" onclick="toggleFlip()" title="Flip horizontally">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Video Viewport with overlay Canvas -->
+                    <div class="video-viewport" id="viewportContainer">
+                        <div class="stream-hud-overlay">
+                            <div class="hud-tag" id="hudStatus">STANDBY</div>
+                            <div class="hud-tag" id="hudFps">0.0 FPS</div>
+                            <div class="hud-tag" id="hudLatency">0 ms</div>
+                        </div>
+
+                        <div class="viewport-placeholder" id="videoPlaceholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M23 7l-7 5 7 5V7z"/>
+                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                            </svg>
+                            <p style="font-size: 1.05rem; font-weight: 600; color: #cbd5e1;">Live Camera Feed Offline</p>
+                            <span style="font-size: 0.82rem; max-width: 320px;">Select your camera source from the dropdown above and click "Start Live Camera" to begin real-time box detection.</span>
+                        </div>
+
+                        <video id="liveVideo" autoplay playsinline muted></video>
+                        <canvas id="detectionCanvas"></canvas>
+                    </div>
+
+                    <!-- Snapshot gallery strip -->
+                    <div id="snapshotSection" style="display:none;">
+                        <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Captured Snapshots</span>
+                        <div class="snapshots-strip" id="snapshotsList"></div>
+                    </div>
+                </div>
+
+                <!-- Live Telemetry & Intelligence Sidebar -->
+                <div class="sidebar">
+                    <div class="card">
+                        <div class="card-title">
+                            <span>Real-Time Detection</span>
+                            <span id="liveStatusPill" style="font-size: 0.7rem; color: #94a3b8;">IDLE</span>
+                        </div>
+                        
+                        <div class="metrics-grid" id="liveMetricsContainer">
+                            <div class="metric-box full-width">
+                                <div class="metric-value" id="liveTotalCount">0</div>
+                                <div class="metric-label">Total Boxes Detected</div>
+                            </div>
+                            <!-- Dynamic class metric boxes injected here -->
+                        </div>
+
+                        <!-- Settings & Threshold Slider -->
+                        <div class="setting-row" style="margin-top: 18px;">
+                            <div class="setting-header">
+                                <span>Confidence Threshold</span>
+                                <span id="confVal" style="font-weight: 600; color: var(--primary);">35%</span>
+                            </div>
+                            <input type="range" id="confSlider" class="slider" min="10" max="90" value="35" oninput="updateConfidence(this.value)">
+                        </div>
+
+                        <div class="setting-row">
+                            <div class="setting-header">
+                                <span>Inference Stream Rate</span>
+                                <span id="rateVal" style="font-weight: 600; color: var(--accent-emerald);">Optimal (15 FPS)</span>
+                            </div>
+                            <input type="range" id="rateSlider" class="slider" min="5" max="30" value="15" oninput="updateStreamRate(this.value)">
+                        </div>
+                    </div>
+
+                    <!-- Warehouse Live Event Feed -->
+                    <div class="card">
+                        <div class="card-title">
+                            <span>Conveyor Activity Log</span>
+                        </div>
+                        <div class="activity-feed" id="activityFeed">
+                            <div class="activity-item">[SYSTEM] AI Vision Engine initialized</div>
+                            <div class="activity-item">[INFO] Waiting for camera feed startup...</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- VIEW 2: PHOTO UPLOAD MODE                                           -->
+        <!-- =================================================================== -->
+        <div id="photoViewPanel" class="view-panel">
+            <div class="photo-grid">
+                
+                <!-- Upload Controls & Form -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>Upload Conveyor Photo</span>
+                    </div>
+
+                    <input type="file" id="photoInput" accept="image/png, image/jpeg, image/webp" style="display: none;" onchange="handleFileSelected(this.files[0])">
+                    
+                    <div class="dropzone" id="dropzone" onclick="document.getElementById('photoInput').click()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        <p>Click or Drag & Drop Image Here</p>
+                        <span>Supports JPG, PNG, WEBP warehouse conveyor pictures</span>
+                    </div>
+
+                    <div class="sample-images-bar">
+                        <span>Need sample?</span>
+                        <button class="sample-btn" onclick="loadSampleImage()">Load Conveyor Sample</button>
+                    </div>
+
+                    <!-- Threshold slider for photo -->
+                    <div class="setting-row" style="margin-top: 20px;">
+                        <div class="setting-header">
+                            <span>Confidence Threshold</span>
+                            <span id="photoConfVal" style="font-weight: 600; color: var(--primary);">35%</span>
+                        </div>
+                        <input type="range" id="photoConfSlider" class="slider" min="10" max="90" value="35" oninput="document.getElementById('photoConfVal').innerText = this.value + '%'">
+                    </div>
+
+                    <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+                        <button id="analyzePhotoBtn" class="btn btn-primary" style="justify-content: center; padding: 12px;" onclick="analyzePhoto()" disabled>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            Run YOLO Detection
+                        </button>
+                    </div>
+
+                    <!-- Photo Detection Summary Card -->
+                    <div id="photoMetricsSummary" style="display: none; margin-top: 20px;">
+                        <div class="metrics-grid" id="photoMetricsContainer">
+                            <div class="metric-box full-width">
+                                <div class="metric-value" id="photoTotalCount">0</div>
+                                <div class="metric-label">Detected Boxes</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 14px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-muted); text-align: center;">
+                            Inference Time: <span id="photoLatency" style="color: var(--accent-emerald);">0 ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Photo Results Display -->
+                <div class="photo-viewer-card">
+                    <div class="card-title">
+                        <span>Detection Preview</span>
+                        <a id="downloadResultBtn" class="btn" style="display: none; font-size: 0.78rem;" download="detected_boxes.jpg">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Download Result
+                        </a>
+                    </div>
+
+                    <div class="photo-preview-wrap" id="photoPreviewWrap">
+                        <div class="viewport-placeholder" id="photoPlaceholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            <p style="font-size: 1rem; color: #cbd5e1;">No image loaded yet</p>
+                            <span style="font-size: 0.8rem;">Upload an image or load the sample conveyor belt image to test</span>
+                        </div>
+                        <img id="photoImage" style="display: none;" alt="Uploaded Preview">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Hidden Offscreen Canvas for Snapshot / Frame Grabbing -->
+    <canvas id="offscreenCanvas" style="display: none;"></canvas>
+
+    <script>
+        // Global App State
+        let currentStream = null;
+        let isStreaming = false;
+        let isFlipped = false;
+        let streamIntervalId = null;
+        let currentDeviceId = null;
+        let confidenceThreshold = 0.35;
+        let streamTargetFps = 15;
+        let isProcessingFrame = false;
+        let activeModelInfo = null;
+
+        // Color palette for classes
+        const CLASS_COLORS = [
+            '#06b6d4', // Cyan
+            '#a855f7', // Purple
+            '#10b981', // Emerald
+            '#f59e0b', // Amber
+            '#ec4899', // Pink
+            '#3b82f6', // Blue
+        ];
+
+        // FPS and Latency measurement
+        let frameCount = 0;
+        let lastFpsUpdateTime = performance.now();
+
+        // Selected Photo file
+        let currentPhotoFile = null;
+
+        // DOM References
+        const liveVideo = document.getElementById('liveVideo');
+        const detectionCanvas = document.getElementById('detectionCanvas');
+        const dCtx = detectionCanvas.getContext('2d');
+        const offCanvas = document.getElementById('offscreenCanvas');
+        const oCtx = offCanvas.getContext('2d');
+        const cameraSelect = document.getElementById('cameraSelect');
+        const modelSelect = document.getElementById('modelSelect');
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const startCamBtn = document.getElementById('startCamBtn');
+        const snapBtn = document.getElementById('snapBtn');
+        const hudStatus = document.getElementById('hudStatus');
+        const hudFps = document.getElementById('hudFps');
+        const hudLatency = document.getElementById('hudLatency');
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            setupDropzone();
+            await fetchModelInfo();
+            await populateCameraDevices();
+        });
+
+        // Model metadata & discovery
+        async function fetchModelInfo() {
+            try {
+                const res = await fetch('/api/model_info');
+                if (!res.ok) return;
+                const data = await res.json();
+                activeModelInfo = data;
+
+                // Update model select options
+                if (data.available_models && data.available_models.length > 0) {
+                    modelSelect.innerHTML = '';
+                    data.available_models.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m;
+                        opt.textContent = m + (m === data.active_model ? ' (Active)' : '');
+                        if (m === data.active_model) opt.selected = true;
+                        modelSelect.appendChild(opt);
+                    });
+                }
+
+                const classNames = Object.values(data.classes || {}).join(', ');
+                document.getElementById('modelStatusTag').innerText = `MODEL: ${data.active_model.toUpperCase()} [${classNames}]`;
+                addLog(`Loaded model "${data.active_model}" with classes: [${classNames}]`);
+
+                renderDynamicMetricCards(data.classes);
+            } catch (e) {
+                console.error("Could not fetch model info:", e);
+            }
+        }
+
+        async function onModelSwitch(modelName) {
+            try {
+                addLog(`Switching to model "${modelName}"...`);
+                const res = await fetch('/api/switch_model', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model_name: modelName })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    await fetchModelInfo();
+                    addLog(`Successfully activated ${modelName}`);
+                } else {
+                    alert("Error switching model: " + data.detail);
+                }
+            } catch (err) {
+                console.error("Model switch failed:", err);
+            }
+        }
+
+        function renderDynamicMetricCards(classesDict) {
+            const liveContainer = document.getElementById('liveMetricsContainer');
+            const photoContainer = document.getElementById('photoMetricsContainer');
+
+            const classes = Object.values(classesDict || {});
+            
+            // Rebuild class metric boxes
+            let extraLiveHtml = '';
+            let extraPhotoHtml = '';
+
+            classes.forEach((cls, idx) => {
+                const color = CLASS_COLORS[idx % CLASS_COLORS.length];
+                const cleanId = cls.replace(/[^a-zA-Z0-9]/g, '_');
+
+                extraLiveHtml += `
+                    <div class="metric-box">
+                        <div class="metric-value" id="live_cls_${cleanId}" style="color: ${color}">0</div>
+                        <div class="metric-label">${cls}</div>
+                    </div>
+                `;
+                extraPhotoHtml += `
+                    <div class="metric-box">
+                        <div class="metric-value" id="photo_cls_${cleanId}" style="color: ${color}">0</div>
+                        <div class="metric-label">${cls}</div>
+                    </div>
+                `;
+            });
+
+            liveContainer.innerHTML = `
+                <div class="metric-box full-width">
+                    <div class="metric-value" id="liveTotalCount">0</div>
+                    <div class="metric-label">Total Boxes Detected</div>
+                </div>
+                ${extraLiveHtml}
+            `;
+
+            photoContainer.innerHTML = `
+                <div class="metric-box full-width">
+                    <div class="metric-value" id="photoTotalCount">0</div>
+                    <div class="metric-label">Total Boxes Detected</div>
+                </div>
+                ${extraPhotoHtml}
+            `;
+        }
+
+        // Switch between 'live' and 'photo' tabs
+        function switchMode(mode) {
+            const liveTab = document.getElementById('tabLiveBtn');
+            const photoTab = document.getElementById('tabPhotoBtn');
+            const livePanel = document.getElementById('liveViewPanel');
+            const photoPanel = document.getElementById('photoViewPanel');
+
+            if (mode === 'live') {
+                liveTab.classList.add('active');
+                photoTab.classList.remove('active');
+                livePanel.classList.add('active');
+                photoPanel.classList.remove('active');
+            } else {
+                photoTab.classList.add('active');
+                liveTab.classList.remove('active');
+                photoPanel.classList.add('active');
+                livePanel.classList.remove('active');
+            }
+        }
+
+        // ===================================================================
+        // CAMERA ENUMERATION & SELECTION
+        // ===================================================================
+        async function populateCameraDevices() {
+            try {
+                if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+                    try {
+                        const tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                        tempStream.getTracks().forEach(track => track.stop());
+                    } catch (e) {
+                        console.warn("Initial media permission prompt closed or denied:", e);
+                    }
+
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevices = devices.filter(d => d.kind === 'videoinput');
+
+                    cameraSelect.innerHTML = '<option value="">-- Choose Camera --</option>';
+
+                    videoDevices.forEach((device, index) => {
+                        const option = document.createElement('option');
+                        option.value = device.deviceId;
+                        option.text = device.label || `Camera ${index + 1} (${device.deviceId.slice(0, 6)}...)`;
+                        cameraSelect.appendChild(option);
+                    });
+
+                    if (videoDevices.length > 0) {
+                        cameraSelect.selectedIndex = 1;
+                        currentDeviceId = videoDevices[0].deviceId;
+                        addLog(`Found ${videoDevices.length} camera device(s). Ready.`);
+                    } else {
+                        addLog(`No video devices found on system.`);
+                    }
+                }
+            } catch (err) {
+                console.error("Error enumerating cameras:", err);
+                addLog(`[WARN] Camera access restricted: ${err.message}`);
+            }
+        }
+
+        function onCameraSelected() {
+            currentDeviceId = cameraSelect.value;
+            if (isStreaming) {
+                stopCameraStream();
+                startCameraStream();
+            }
+        }
+
+        // ===================================================================
+        // LIVE CAMERA STREAM & YOLO DETECTION
+        // ===================================================================
+        async function toggleCameraStream() {
+            if (isStreaming) {
+                stopCameraStream();
+            } else {
+                await startCameraStream();
+            }
+        }
+
+        async function startCameraStream() {
+            try {
+                const constraints = {
+                    audio: false,
+                    video: {
+                        deviceId: currentDeviceId ? { exact: currentDeviceId } : undefined,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                liveVideo.srcObject = currentStream;
+
+                await new Promise(resolve => {
+                    liveVideo.onloadedmetadata = () => {
+                        liveVideo.play();
+                        resolve();
+                    };
+                });
+
+                isStreaming = true;
+                videoPlaceholder.style.display = 'none';
+                startCamBtn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>
+                    <span>Stop Live Camera</span>
+                `;
+                startCamBtn.classList.remove('btn-primary');
+                startCamBtn.classList.add('btn-danger');
+                snapBtn.disabled = false;
+
+                hudStatus.innerText = 'LIVE STREAMING';
+                hudStatus.style.color = '#10b981';
+                document.getElementById('liveStatusPill').innerText = 'ACTIVE TRACKING';
+                document.getElementById('liveStatusPill').style.color = '#10b981';
+
+                addLog(`Live camera feed active (${liveVideo.videoWidth}x${liveVideo.videoHeight})`);
+                startInferenceLoop();
+
+            } catch (err) {
+                console.error("Failed to start camera:", err);
+                alert("Could not access camera. Please check camera permissions.");
+                addLog(`[ERROR] Camera launch failed: ${err.message}`);
+            }
+        }
+
+        function stopCameraStream() {
+            if (streamIntervalId) {
+                clearInterval(streamIntervalId);
+                streamIntervalId = null;
+            }
+
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+
+            liveVideo.srcObject = null;
+            isStreaming = false;
+
+            dCtx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height);
+            videoPlaceholder.style.display = 'flex';
+
+            startCamBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span>Start Live Camera</span>
+            `;
+            startCamBtn.classList.add('btn-primary');
+            startCamBtn.classList.remove('btn-danger');
+            snapBtn.disabled = true;
+
+            hudStatus.innerText = 'STANDBY';
+            hudStatus.style.color = '#38bdf8';
+            document.getElementById('liveStatusPill').innerText = 'IDLE';
+            document.getElementById('liveStatusPill').style.color = '#94a3b8';
+
+            addLog("Camera stream stopped.");
+        }
+
+        function toggleFlip() {
+            isFlipped = !isFlipped;
+            const transformVal = isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
+            liveVideo.style.transform = transformVal;
+            detectionCanvas.style.transform = transformVal;
+        }
+
+        function startInferenceLoop() {
+            if (streamIntervalId) clearInterval(streamIntervalId);
+            const intervalMs = Math.round(1000 / streamTargetFps);
+
+            streamIntervalId = setInterval(async () => {
+                if (!isStreaming || isProcessingFrame || liveVideo.readyState < 2) return;
+                await processLiveFrame();
+            }, intervalMs);
+        }
+
+        async function processLiveFrame() {
+            isProcessingFrame = true;
+            try {
+                const vw = liveVideo.videoWidth;
+                const vh = liveVideo.videoHeight;
+                if (!vw || !vh) {
+                    isProcessingFrame = false;
+                    return;
+                }
+
+                if (detectionCanvas.width !== vw || detectionCanvas.height !== vh) {
+                    detectionCanvas.width = vw;
+                    detectionCanvas.height = vh;
+                }
+
+                const scale = Math.min(1.0, 640 / vw);
+                const dw = Math.round(vw * scale);
+                const dh = Math.round(vh * scale);
+
+                offCanvas.width = dw;
+                offCanvas.height = dh;
+                oCtx.drawImage(liveVideo, 0, 0, dw, dh);
+
+                const base64Data = offCanvas.toDataURL('image/jpeg', 0.7);
+
+                const t0 = performance.now();
+                const response = await fetch('/api/detect_frame', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image: base64Data,
+                        confidence: confidenceThreshold
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                const roundtripMs = Math.round(performance.now() - t0);
+
+                if (data.success) {
+                    document.getElementById('liveTotalCount').innerText = data.total_boxes;
+                    
+                    // Update dynamic class counts
+                    if (data.class_counts) {
+                        for (const [cls, count] of Object.entries(data.class_counts)) {
+                            const cleanId = cls.replace(/[^a-zA-Z0-9]/g, '_');
+                            const el = document.getElementById(`live_cls_${cleanId}`);
+                            if (el) el.innerText = count;
+                        }
+                    }
+
+                    hudLatency.innerText = `${data.inference_ms} ms (${roundtripMs}ms RTT)`;
+
+                    const scaleX = vw / (data.image_width || dw);
+                    const scaleY = vh / (data.image_height || dh);
+
+                    drawDetections(data.boxes, scaleX, scaleY);
+                }
+
+                frameCount++;
+                const now = performance.now();
+                if (now - lastFpsUpdateTime >= 1000) {
+                    const currentFps = ((frameCount * 1000) / (now - lastFpsUpdateTime)).toFixed(1);
+                    hudFps.innerText = `${currentFps} FPS`;
+                    frameCount = 0;
+                    lastFpsUpdateTime = now;
+                }
+
+            } catch (err) {
+                console.warn("Frame detection glitch:", err);
+            } finally {
+                isProcessingFrame = false;
+            }
+        }
+
+        // Draw crisp HUD-style bounding boxes on canvas
+        function drawDetections(boxes, scaleX = 1, scaleY = 1) {
+            dCtx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height);
+
+            if (!boxes || boxes.length === 0) return;
+
+            boxes.forEach(box => {
+                const x1 = box.x1 * scaleX;
+                const y1 = box.y1 * scaleY;
+                const x2 = box.x2 * scaleX;
+                const y2 = box.y2 * scaleY;
+                const w = x2 - x1;
+                const h = y2 - y1;
+
+                const colorIdx = (box.class_id || 0) % CLASS_COLORS.length;
+                const boxColor = CLASS_COLORS[colorIdx];
+
+                // Draw semi-transparent box body
+                dCtx.fillStyle = 'rgba(6, 182, 212, 0.12)';
+                dCtx.fillRect(x1, y1, w, h);
+
+                // Draw bounding box outline
+                dCtx.strokeStyle = boxColor;
+                dCtx.lineWidth = 2.5;
+                dCtx.strokeRect(x1, y1, w, h);
+
+                // Draw stylish corner brackets
+                const cornerLen = Math.min(18, w / 4, h / 4);
+                dCtx.lineWidth = 4;
+                dCtx.strokeStyle = '#ffffff';
+
+                // Top-Left
+                dCtx.beginPath();
+                dCtx.moveTo(x1, y1 + cornerLen);
+                dCtx.lineTo(x1, y1);
+                dCtx.lineTo(x1 + cornerLen, y1);
+                dCtx.stroke();
+
+                // Top-Right
+                dCtx.beginPath();
+                dCtx.moveTo(x2 - cornerLen, y1);
+                dCtx.lineTo(x2, y1);
+                dCtx.lineTo(x2, y1 + cornerLen);
+                dCtx.stroke();
+
+                // Bottom-Left
+                dCtx.beginPath();
+                dCtx.moveTo(x1, y2 - cornerLen);
+                dCtx.lineTo(x1, y2);
+                dCtx.lineTo(x1 + cornerLen, y2);
+                dCtx.stroke();
+
+                // Bottom-Right
+                dCtx.beginPath();
+                dCtx.moveTo(x2 - cornerLen, y2);
+                dCtx.lineTo(x2, y2);
+                dCtx.lineTo(x2, y2 - cornerLen);
+                dCtx.stroke();
+
+                // Draw Tag Label Pill
+                const labelText = `${box.class_name} ${(box.confidence * 100).toFixed(0)}%`;
+                dCtx.font = 'bold 13px "JetBrains Mono", monospace';
+                const textMetrics = dCtx.measureText(labelText);
+                const tagWidth = textMetrics.width + 12;
+                const tagHeight = 22;
+
+                const tagY = Math.max(0, y1 - tagHeight - 2);
+
+                dCtx.fillStyle = boxColor;
+                dCtx.beginPath();
+                dCtx.roundRect(x1, tagY, tagWidth, tagHeight, 4);
+                dCtx.fill();
+
+                dCtx.fillStyle = '#000000';
+                dCtx.fillText(labelText, x1 + 6, tagY + 16);
+            });
+        }
+
+        // Snapshot capture
+        function captureSnapshot() {
+            if (!isStreaming || liveVideo.readyState < 2) return;
+
+            const vw = liveVideo.videoWidth;
+            const vh = liveVideo.videoHeight;
+            const snapCanvas = document.createElement('canvas');
+            snapCanvas.width = vw;
+            snapCanvas.height = vh;
+            const sCtx = snapCanvas.getContext('2d');
+
+            sCtx.drawImage(liveVideo, 0, 0, vw, vh);
+            sCtx.drawImage(detectionCanvas, 0, 0, vw, vh);
+
+            const snapUrl = snapCanvas.toDataURL('image/jpeg', 0.92);
+
+            const snapSection = document.getElementById('snapshotSection');
+            const snapList = document.getElementById('snapshotsList');
+            snapSection.style.display = 'block';
+
+            const thumb = document.createElement('img');
+            thumb.src = snapUrl;
+            thumb.className = 'snapshot-thumb';
+            thumb.title = 'Click to open full resolution snapshot';
+            thumb.onclick = () => {
+                const w = window.open('');
+                w.document.write(`<img src="${snapUrl}" style="max-width:100%; height:auto; background:#090d16;" />`);
+            };
+            snapList.prepend(thumb);
+
+            addLog(`[SNAPSHOT] Captured frame with ${document.getElementById('liveTotalCount').innerText} box(es)`);
+        }
+
+        function updateConfidence(val) {
+            confidenceThreshold = parseFloat(val) / 100;
+            document.getElementById('confVal').innerText = val + '%';
+        }
+
+        function updateStreamRate(val) {
+            streamTargetFps = parseInt(val);
+            document.getElementById('rateVal').innerText = `${val} FPS`;
+            if (isStreaming) {
+                startInferenceLoop();
+            }
+        }
+
+        function addLog(msg) {
+            const feed = document.getElementById('activityFeed');
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            const now = new Date().toTimeString().split(' ')[0];
+            item.innerText = `[${now}] ${msg}`;
+            feed.prepend(item);
+        }
+
+        // ===================================================================
+        // PHOTO UPLOAD MODE LOGIC
+        // ===================================================================
+        function setupDropzone() {
+            const dropzone = document.getElementById('dropzone');
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.add('dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove('dragover');
+                });
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    handleFileSelected(files[0]);
+                }
+            });
+        }
+
+        function handleFileSelected(file) {
+            if (!file) return;
+            currentPhotoFile = file;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imgEl = document.getElementById('photoImage');
+                imgEl.src = e.target.result;
+                imgEl.style.display = 'block';
+                document.getElementById('photoPlaceholder').style.display = 'none';
+                document.getElementById('analyzePhotoBtn').disabled = false;
+                document.getElementById('downloadResultBtn').style.display = 'none';
+                document.getElementById('photoMetricsSummary').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function loadSampleImage() {
+            try {
+                const resp = await fetch('/example_input.jpg');
+                if (!resp.ok) throw new Error("Sample image not found on server");
+                const blob = await resp.blob();
+                const file = new File([blob], "example_input.jpg", { type: "image/jpeg" });
+                handleFileSelected(file);
+                addLog("Loaded conveyor sample image.");
+            } catch (err) {
+                console.error("Error loading sample:", err);
+                alert("Could not load sample image: " + err.message);
+            }
+        }
+
+        async function analyzePhoto() {
+            if (!currentPhotoFile) return;
+
+            const analyzeBtn = document.getElementById('analyzePhotoBtn');
+            const confVal = parseFloat(document.getElementById('photoConfSlider').value) / 100;
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = `
+                <div class="spinner" style="width:18px; height:18px; border-width:2px;"></div>
+                <span>Analyzing Image with YOLOv8...</span>
+            `;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', currentPhotoFile);
+                formData.append('confidence', confVal);
+
+                const response = await fetch('/api/detect_file', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const imgEl = document.getElementById('photoImage');
+                    imgEl.src = data.annotated_image;
+
+                    document.getElementById('photoMetricsSummary').style.display = 'block';
+                    document.getElementById('photoTotalCount').innerText = data.total_boxes;
+
+                    // Update dynamic class counts
+                    if (data.class_counts) {
+                        for (const [cls, count] of Object.entries(data.class_counts)) {
+                            const cleanId = cls.replace(/[^a-zA-Z0-9]/g, '_');
+                            const el = document.getElementById(`photo_cls_${cleanId}`);
+                            if (el) el.innerText = count;
+                        }
+                    }
+
+                    document.getElementById('photoLatency').innerText = `${data.inference_ms} ms`;
+
+                    const dlBtn = document.getElementById('downloadResultBtn');
+                    dlBtn.href = data.annotated_image;
+                    dlBtn.style.display = 'inline-flex';
+
+                    addLog(`Photo analyzed: Found ${data.total_boxes} boxes in ${data.inference_ms}ms`);
+                } else {
+                    alert("Detection error: " + (data.error || "Unknown error"));
+                }
+
+            } catch (err) {
+                console.error("Analysis failed:", err);
+                alert("Analysis failed: " + err.message);
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Run YOLO Detection
+                `;
+            }
+        }
+    </script>
 </body>
 </html>
